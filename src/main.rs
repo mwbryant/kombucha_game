@@ -2,20 +2,35 @@
 #![allow(clippy::type_complexity)]
 #![allow(clippy::too_many_arguments)]
 
-use bevy::{prelude::*, render::camera::ScalingMode, window::PresentMode};
-use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
+use bevy::{prelude::*, sprite::collide_aabb::collide, window::PresentMode};
+use bevy_asset_loader::AssetLoader;
+use bevy_inspector_egui::{RegisterInspectable, WorldInspectorParams, WorldInspectorPlugin};
+
+mod prelude;
+use kayak_ui::bevy::BevyKayakUIPlugin;
+use prelude::*;
+mod mouse;
+use mouse::{mouse_position, MousePosition};
+use shop::ShopPlugin;
+mod assets;
+mod shop;
 
 pub const CLEAR: Color = Color::rgb(0.3, 0.3, 0.3);
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
 
 fn main() {
-    App::new()
+    let mut app = App::new();
+    AssetLoader::new(GameState::Splash)
+        .continue_to_state(GameState::Gameplay)
+        .with_collection::<ImageAssets>()
+        .build(&mut app);
+    app.add_state(GameState::Splash)
         .insert_resource(ClearColor(CLEAR))
         .insert_resource(WindowDescriptor {
             width: HEIGHT * RESOLUTION,
             height: HEIGHT,
-            title: "Bevy Template".to_string(),
+            title: "Kombucha Game".to_string(),
             present_mode: PresentMode::Fifo,
             resizable: false,
             ..Default::default()
@@ -27,20 +42,64 @@ fn main() {
         })
         .add_plugin(WorldInspectorPlugin::new())
         .add_startup_system(spawn_camera)
+        .insert_resource(MousePosition(Vec2::ZERO))
         .add_system(toggle_inspector)
+        .add_system(mouse_position)
+        .add_system(click_detection)
+        .add_system_set(SystemSet::on_enter(GameState::Gameplay).with_system(spawn_bottle))
+        .add_startup_system(spawn_player)
+        .add_plugin(ShopPlugin)
+        .add_plugin(BevyKayakUIPlugin)
+        .register_inspectable::<Player>()
+        .register_inspectable::<TeaType>()
+        .register_inspectable::<Tea>()
         .run();
+}
+fn spawn_player(mut commands: Commands) {
+    commands
+        .spawn()
+        .insert(Player {
+            money: 500.0,
+            teas: Vec::new(),
+        })
+        .insert(Name::new("Player"));
+}
+
+fn spawn_bottle(mut commands: Commands, images: Res<ImageAssets>) {
+    commands
+        .spawn_bundle(SpriteSheetBundle {
+            sprite: TextureAtlasSprite::new(0),
+            texture_atlas: images.sprite_sheet.clone(),
+            ..default()
+        })
+        .insert(Clickable {
+            hitbox: Vec2::splat(32.0),
+        })
+        .insert(Name::new("Bottle 1"));
+}
+
+fn click_detection(
+    mouse_position: Res<MousePosition>,
+    clickables: Query<(&Clickable, &GlobalTransform)>,
+    mouse: Res<Input<MouseButton>>,
+) {
+    if mouse.just_pressed(MouseButton::Left) {
+        for (clickable, transform) in clickables.iter() {
+            if collide(
+                transform.translation,
+                clickable.hitbox,
+                mouse_position.0.extend(0.0),
+                Vec2::splat(1.0),
+            )
+            .is_some()
+            {}
+        }
+    }
 }
 
 fn spawn_camera(mut commands: Commands) {
     let mut camera = OrthographicCameraBundle::new_2d();
-
-    camera.orthographic_projection.right = 1.0 * RESOLUTION;
-    camera.orthographic_projection.left = -1.0 * RESOLUTION;
-
-    camera.orthographic_projection.top = 1.0;
-    camera.orthographic_projection.bottom = -1.0;
-
-    camera.orthographic_projection.scaling_mode = ScalingMode::None;
+    camera.orthographic_projection.scale = 1.0 / 3.0;
 
     commands.spawn_bundle(camera);
 }

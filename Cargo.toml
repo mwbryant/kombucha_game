@@ -12,6 +12,7 @@ opt-level = 3
 [dependencies]
 bevy = { version = "0.7", features = [
     "bevy_gilrs",
+    "dynamic",
     "bevy_winit",
     "render",
     "png",
@@ -22,10 +23,14 @@ bevy = { version = "0.7", features = [
     "trace"
      ] }
 
-bevy_kira_audio = { version = "0.9", features = ["ogg", "wav"] }
+bevy_kira_audio = { version = "0.10", features = ["ogg", "wav"] }
 bevy-inspector-egui = "0.10"
 serde = "1.0"
 ron = "0.7"
 rand = "0.8"
+bevy_asset_loader = { version = "0.11", features = ["2d"] }
+kayak_ui = { git = "https://github.com/StarArawn/kayak_ui", features = [
+    "bevy_renderer",
+] }
 
 # cargo run --release --features bevy/trace,bevy/trace_chrome
