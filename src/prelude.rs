@@ -1,3 +1,5 @@
+use std::fmt;
+
 pub use bevy::prelude::*;
 use bevy_asset_loader::AssetCollection;
 use bevy_inspector_egui::Inspectable;
@@ -8,15 +10,35 @@ pub use crate::ui::widgets::*;
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub enum GameState {
     Splash,
-    Menu,
-    Gameplay,
+    Shop,
+    OurStore,
 }
 
 #[derive(Component, Inspectable, Default, Clone, PartialEq)]
-//TODO make a resource
 pub struct Player {
     pub money: f32,
     pub teas: Vec<Tea>,
+}
+
+#[derive(Inspectable, Default, Clone, PartialEq, Debug, Copy)]
+pub struct Scoby {
+    pub health: f32,
+    pub potency: f32,
+}
+
+#[derive(Component, Inspectable, Default, Clone, PartialEq)]
+pub struct Bottle {
+    pub tea: Option<Tea>,
+    pub scoby: Option<Scoby>,
+}
+
+impl fmt::Display for ItemType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ItemType::Tea(_tea) => write!(f, "Tea"),
+            ItemType::Scoby(_scoby) => write!(f, "Scoby"),
+        }
+    }
 }
 
 #[derive(AssetCollection)]
@@ -43,6 +65,17 @@ pub enum TeaType {
     BlackTea,
 }
 
+#[derive(Debug, Clone, PartialEq, Inspectable)]
+pub enum ItemType {
+    Tea(Tea),
+    Scoby(Scoby),
+}
+impl Default for ItemType {
+    fn default() -> Self {
+        ItemType::Tea(Tea::default())
+    }
+}
+
 impl Default for TeaType {
     fn default() -> Self {
         TeaType::BlackTea
@@ -52,7 +85,6 @@ impl Default for TeaType {
 #[derive(Component, Default, Debug, Clone, PartialEq, Copy, Inspectable)]
 pub struct Tea {
     pub tea_type: TeaType,
-    pub cost: f32,
 }
 
 #[derive(Default, Clone, Copy, Debug, Reflect, Deserialize)]

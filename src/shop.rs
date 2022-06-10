@@ -10,12 +10,14 @@ pub struct ShopPlugin;
 
 impl Plugin for ShopPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(GameState::Gameplay).with_system(spawn_shop_grid))
+        app.add_system_set(SystemSet::on_enter(GameState::Shop).with_system(spawn_shop_grid))
+            .add_system_set(SystemSet::on_exit(GameState::Shop).with_system(despawn_shop))
             .add_system_set(
-                SystemSet::on_update(GameState::Gameplay).with_system(update_money_binding),
+                SystemSet::on_update(GameState::Shop).with_system(update_money_binding),
             );
     }
 }
+
 fn update_money_binding(money: ResMut<Binding<f32>>, player: Query<&Player>) {
     let player = player.single();
     money.set(player.money);
@@ -28,13 +30,22 @@ pub fn handle_shop_click(context: &mut KayakContextRef, event: &mut Event, props
     if let EventType::Click(..) = event.event_type {
         context.query_world::<Query<&mut Player>, _, _>(|mut player_query| {
             let mut player = player_query.single_mut();
-            if player.money >= props.tea.cost {
-                player.money -= props.tea.cost;
-                player.teas.push(props.tea);
+            if player.money >= props.cost {
+                player.money -= props.cost;
+                match props.item {
+                    ItemType::Tea(tea) => {
+                        player.teas.push(tea);
+                    }
+                    ItemType::Scoby(scoby) => {}
+                }
             }
             money_binding.set(player.money);
         });
     }
+}
+
+fn despawn_shop(mut commands: Commands) {
+    commands.remove_resource::<BevyContext>();
 }
 
 fn spawn_shop_grid(

@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use crate::shop::handle_shop_click;
 
-use kayak_ui::core::styles::{Corner, LayoutType};
+use kayak_ui::core::styles::{Corner, Edge, LayoutType};
 use kayak_ui::core::{rsx, widget, Binding, OnEvent, WidgetProps};
 use kayak_ui::core::{
     styles::{PositionType, Style, StyleProp, Units},
@@ -13,7 +13,8 @@ use crate::prelude::Tea;
 
 #[derive(Default, Debug, WidgetProps, Clone, PartialEq)]
 pub struct ItemProps {
-    pub tea: Tea,
+    pub item: ItemType,
+    pub cost: f32,
     pub handle: u16,
 }
 
@@ -24,8 +25,22 @@ pub struct ShopProps {
 
 #[widget]
 pub fn Shop(props: ShopProps) {
-    let row_styles = Style {
+    let parent_style = Style {
+        layout_type: StyleProp::Value(LayoutType::Column),
+        row_between: StyleProp::Value(Units::Pixels(1.0)),
+        background_color: StyleProp::Value(KayakColor::new(123.0 / 255.0, 63.0 / 255.0, 1.0, 0.0)),
+        width: StyleProp::Value(Units::Pixels(250.0)),
+        height: StyleProp::Value(Units::Pixels((250.0 + 10.0) * 3.0)),
+        padding: StyleProp::Value(Edge::all(Units::Pixels(0.0))),
+        offset: StyleProp::Value(Edge::all(Units::Pixels(0.0))),
+        ..Style::default()
+    };
+    let element_styles = Style {
         layout_type: StyleProp::Value(LayoutType::Row),
+        left: StyleProp::Value(Units::Pixels(10.0)),
+        top: StyleProp::Value(Units::Pixels(10.0)),
+        padding: StyleProp::Value(Edge::all(Units::Pixels(0.0))),
+        offset: StyleProp::Value(Edge::all(Units::Pixels(0.0))),
         ..Style::default()
     };
 
@@ -36,26 +51,32 @@ pub fn Shop(props: ShopProps) {
     info!("Redraw");
 
     rsx! {
-        <>
-        <Element styles={Some(row_styles)}>
-        <Item tea={Tea {
-            tea_type: TeaType::BlackTea,
-            cost: 100.0
-        }} handle={props.black_tea_handle} />
-        <Item tea={Tea {
-            tea_type: TeaType::BlackTea,
-            cost: 200.0
-        }} handle={props.black_tea_handle} />
-        <Item tea={Tea {
-            tea_type: TeaType::BlackTea,
-            cost: 300.0
-        }} handle={props.black_tea_handle} />
-    </Element>
-    <Element styles={Some(row_styles)}>
-    </Element>
-    <Element styles={Some(row_styles)}>
-    </Element>
-    </>
+        <Element styles={Some(parent_style)}>
+            <Element styles={Some(element_styles)}>
+                <Item item={ItemType::Tea(Tea {
+                    tea_type: TeaType::BlackTea,
+                })} handle={props.black_tea_handle}
+                    cost={100.0} />
+                <Item item={ItemType::Tea(Tea {
+                    tea_type: TeaType::BlackTea,
+                })} handle={props.black_tea_handle}
+                    cost={200.0} />
+            </Element>
+            <Element styles={Some(element_styles)}>
+                <Item item={ItemType::Scoby(Scoby {
+                    health: 100.0,
+                    potency: 100.0,
+                })} handle={props.black_tea_handle}
+                    cost={100.0} />
+            </Element>
+            <Element styles={Some(element_styles)}>
+                <Item item={ItemType::Scoby(Scoby {
+                    health: 100.0,
+                    potency: 100.0,
+                })} handle={props.black_tea_handle}
+                    cost={100.0} />
+            </Element>
+        </Element>
     }
 }
 
@@ -65,8 +86,9 @@ pub fn Item(props: ItemProps) {
         let player = player_query.single();
         let mut style = Style {
             position_type: StyleProp::Value(PositionType::ParentDirected),
-            //padding: StyleProp::Value(Edge::all(Units::Pixels(100.0))),
+            padding: StyleProp::Value(Edge::all(Units::Pixels(0.0))),
             border_radius: StyleProp::Value(Corner::all(30.0)),
+            offset: StyleProp::Value(Edge::all(Units::Pixels(0.0))),
             left: StyleProp::Value(Units::Pixels(10.0)),
             top: StyleProp::Value(Units::Pixels(10.0)),
             width: StyleProp::Value(Units::Pixels(250.0)),
@@ -79,7 +101,7 @@ pub fn Item(props: ItemProps) {
             )),
             ..Style::default()
         };
-        if player.money < props.tea.cost {
+        if player.money < props.cost {
             style.background_color = StyleProp::Value(KayakColor::new(0.1, 0.1, 0.1, 0.0));
         }
         style
@@ -103,7 +125,7 @@ pub fn Item(props: ItemProps) {
     });
 
     let handle = props.handle;
-    let item_name = format!("{:?} {}", props.tea.tea_type, props.tea.cost);
+    let item_name = format!("{} {}", props.item, props.cost);
 
     rsx! {
         <>

@@ -23,7 +23,7 @@ pub const RESOLUTION: f32 = 16.0 / 9.0;
 fn main() {
     let mut app = App::new();
     AssetLoader::new(GameState::Splash)
-        .continue_to_state(GameState::Gameplay)
+        .continue_to_state(GameState::OurStore)
         .with_collection::<ImageAssets>()
         .build(&mut app);
     app.add_state(GameState::Splash)
@@ -47,7 +47,9 @@ fn main() {
         .add_system(toggle_inspector)
         .add_system(mouse_position)
         .add_system(click_detection)
-        .add_system_set(SystemSet::on_enter(GameState::Gameplay).with_system(spawn_bottle))
+        .add_system_set(SystemSet::on_enter(GameState::OurStore).with_system(spawn_bottle))
+        .add_system(bottle_sprite_updating)
+        .add_system(exit_shop)
         .add_startup_system(spawn_player)
         .add_plugin(ShopPlugin)
         .add_plugin(BevyKayakUIPlugin)
@@ -55,6 +57,15 @@ fn main() {
         .register_inspectable::<TeaType>()
         .register_inspectable::<Tea>()
         .run();
+}
+
+fn exit_shop(mut state: ResMut<State<GameState>>, keyboard: Res<Input<KeyCode>>) {
+    if keyboard.just_pressed(KeyCode::Escape) {
+        let _ = state.pop();
+    }
+    if keyboard.just_pressed(KeyCode::Tab) {
+        let _ = state.push(GameState::Shop);
+    }
 }
 
 fn spawn_player(mut commands: Commands) {
@@ -68,25 +79,49 @@ fn spawn_player(mut commands: Commands) {
 }
 
 fn spawn_bottle(mut commands: Commands, images: Res<ImageAssets>) {
+    let sheet_size = 512;
+    let tile_size = 32;
+    let rows = sheet_size / tile_size;
+    let empty_bottle_index = rows + 1;
+
     commands
         .spawn_bundle(SpriteSheetBundle {
-            sprite: TextureAtlasSprite::new(0),
+            sprite: TextureAtlasSprite::new(empty_bottle_index),
             texture_atlas: images.sprite_sheet.clone(),
             ..default()
         })
         .insert(Clickable {
             hitbox: Vec2::splat(32.0),
         })
+        .insert(Bottle::default())
         .insert(Name::new("Bottle 1"));
+}
+fn bottle_sprite_updating(mut bottles: Query<(&mut TextureAtlasSprite, &Bottle), Changed<Bottle>>) {
+    let sheet_size = 512;
+    let tile_size = 32;
+    let rows = sheet_size / tile_size;
+    let filled_bottle_index = 0;
+    let empty_bottle_index = rows + 1;
+
+    for (mut sprite, bottle) in bottles.iter_mut() {
+        if bottle.tea.is_some() {
+            sprite.index = filled_bottle_index;
+        } else {
+            sprite.index = empty_bottle_index;
+        }
+    }
 }
 
 fn click_detection(
     mouse_position: Res<MousePosition>,
-    clickables: Query<(&Clickable, &GlobalTransform)>,
+    clickables: Query<(Entity, &Clickable, &GlobalTransform)>,
+    mut bottles: Query<&mut Bottle>,
     mouse: Res<Input<MouseButton>>,
+    mut player: Query<&mut Player>,
 ) {
+    let mut player = player.single_mut();
     if mouse.just_pressed(MouseButton::Left) {
-        for (clickable, transform) in clickables.iter() {
+        for (entity, clickable, transform) in clickables.iter() {
             if collide(
                 transform.translation,
                 clickable.hitbox,
@@ -94,7 +129,15 @@ fn click_detection(
                 Vec2::splat(1.0),
             )
             .is_some()
-            {}
+            {
+                if let Ok(mut bottle) = bottles.get_mut(entity) {
+                    if bottle.tea.is_none() {
+                        if let Some(tea) = player.teas.pop() {
+                            bottle.tea = Some(tea);
+                        }
+                    }
+                }
+            }
         }
     }
 }
