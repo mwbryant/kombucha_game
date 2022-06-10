@@ -7,13 +7,17 @@ use bevy_asset_loader::AssetLoader;
 use bevy_inspector_egui::{RegisterInspectable, WorldInspectorParams, WorldInspectorPlugin};
 
 mod prelude;
-use kayak_ui::bevy::BevyKayakUIPlugin;
+use kayak_ui::{
+    bevy::BevyKayakUIPlugin,
+    core::{Binding, MutableBound},
+};
 use prelude::*;
 mod mouse;
 use mouse::{mouse_position, MousePosition};
 use shop::ShopPlugin;
 mod assets;
 mod shop;
+mod ui;
 
 pub const CLEAR: Color = Color::rgb(0.3, 0.3, 0.3);
 pub const HEIGHT: f32 = 900.0;
@@ -55,6 +59,7 @@ fn main() {
         .register_inspectable::<Tea>()
         .run();
 }
+
 fn spawn_player(mut commands: Commands) {
     commands
         .spawn()

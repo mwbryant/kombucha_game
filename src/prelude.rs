@@ -3,6 +3,8 @@ use bevy_asset_loader::AssetCollection;
 use bevy_inspector_egui::Inspectable;
 use serde::Deserialize;
 
+pub use crate::ui::widgets::*;
+
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 pub enum GameState {
     Splash,
