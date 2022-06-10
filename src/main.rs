@@ -7,10 +7,7 @@ use bevy_asset_loader::AssetLoader;
 use bevy_inspector_egui::{RegisterInspectable, WorldInspectorParams, WorldInspectorPlugin};
 
 mod prelude;
-use kayak_ui::{
-    bevy::BevyKayakUIPlugin,
-    core::{Binding, MutableBound},
-};
+use kayak_ui::bevy::BevyKayakUIPlugin;
 use prelude::*;
 mod mouse;
 use mouse::{mouse_position, MousePosition};

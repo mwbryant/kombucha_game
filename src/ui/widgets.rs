@@ -1,19 +1,13 @@
 use crate::prelude::*;
 use crate::shop::handle_shop_click;
-use kayak_ui::bevy::{BevyContext, FontMapping, ImageManager, UICameraBundle};
+
 use kayak_ui::core::styles::{Corner, LayoutType};
+use kayak_ui::core::{rsx, widget, Binding, OnEvent, WidgetProps};
 use kayak_ui::core::{
-    bind, rsx, widget, Binding, Event, EventType, KayakContextRef, MutableBound, OnEvent,
-    WidgetProps,
-};
-use kayak_ui::core::{
-    render,
     styles::{PositionType, Style, StyleProp, Units},
-    Color as KayakColor, Index,
+    Color as KayakColor,
 };
-use kayak_ui::widgets::{
-    App as KayakApp, Button as KayakButton, Element, Image as KayakImage, Text as KayakText,
-};
+use kayak_ui::widgets::{Button as KayakButton, Element, Image as KayakImage, Text as KayakText};
 
 use crate::prelude::Tea;
 

@@ -1,19 +1,10 @@
 use crate::assets::convert_to_image;
 use crate::prelude::*;
 use kayak_ui::bevy::{BevyContext, FontMapping, ImageManager, UICameraBundle};
-use kayak_ui::core::styles::{Corner, LayoutType};
-use kayak_ui::core::{
-    bind, rsx, widget, Binding, Event, EventType, KayakContextRef, MutableBound, OnEvent,
-    WidgetProps,
-};
-use kayak_ui::core::{
-    render,
-    styles::{PositionType, Style, StyleProp, Units},
-    Color as KayakColor, Index,
-};
-use kayak_ui::widgets::{
-    App as KayakApp, Button as KayakButton, Element, Image as KayakImage, Text as KayakText,
-};
+
+use kayak_ui::core::{bind, Binding, Event, EventType, KayakContextRef, MutableBound};
+use kayak_ui::core::{render, Index};
+use kayak_ui::widgets::App as KayakApp;
 
 pub struct ShopPlugin;
 

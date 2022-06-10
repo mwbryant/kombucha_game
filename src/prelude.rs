@@ -5,7 +5,7 @@ use serde::Deserialize;
 
 pub use crate::ui::widgets::*;
 
-#[derive(Clone, Eq, PartialEq, Debug, Hash)]
+#[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub enum GameState {
     Splash,
     Menu,
